@@ -1,133 +1,136 @@
-import 'babel-polyfill';
-import IncidentNormalizer from '@statengine/siamese';
-import _ from 'lodash';
-import moment from 'moment-timezone';
+import "babel-polyfill";
+import IncidentNormalizer from "@statengine/siamese";
+import _ from "lodash";
+import moment from "moment-timezone";
 
-const LOW = 'LOW';
-const MEDIUM = 'MEDIUM';
-const HIGH = 'HIGH';
+const LOW = "LOW";
+const MEDIUM = "MEDIUM";
+const HIGH = "HIGH";
 
-const FIRE = 'Fire';
-const TECH = 'TechRescue';
-const EMS = 'EMS';
-const HAZMAT = 'Hazmat';
+const FIRE = "Fire";
+const TECH = "TechRescue";
+const EMS = "EMS";
+const HAZMAT = "Hazmat";
 
 const typeLookup = {
-  'Potentially Life-Threatening': {
-    'Medical Incident': {
+  "Potentially Life-Threatening": {
+    "Medical Incident": {
       risk_category: MEDIUM,
       response_class: EMS
     },
-    'Traffic Collision': {
+    "Traffic Collision": {
       risk_category: HIGH,
-      response_class: EMS,
+      response_class: EMS
     },
-    'Water Rescue': {
+    "Water Rescue": {
       risk_category: MEDIUM,
       response_class: EMS
     },
-    'Other': {
+    Other: {
       risk_category: MEDIUM,
-      response_class: EMS,
-    },
+      response_class: EMS
+    }
   },
-  'Non Life-threatening': {
-    'Medical Incident': {
+  "Non Life-threatening": {
+    "Medical Incident": {
       risk_category: LOW,
       response_class: EMS
     },
-    'Traffic Collision': {
+    "Traffic Collision": {
       risk_category: LOW,
-      response_class: EMS,
+      response_class: EMS
     },
-    'Other': {
+    Other: {
       risk_category: LOW,
-      response_class: EMS,
-    },
+      response_class: EMS
+    }
   },
-  'Fire': {
-    'Outside Fire': {
+  Fire: {
+    "Outside Fire": {
       risk_category: LOW,
       response_class: FIRE
     },
-    'Vehicle Fire': {
-      risk_category: MEDIUM,
-      response_class: FIRE,
-    },
-    'Structure Fire': {
+    "Vehicle Fire": {
       risk_category: HIGH,
       response_class: FIRE
     },
-    'Water Rescue': {
-      risk_category: MEDIUM,
-      response_class: TECH,
-    },
-    'Other': {
-      risk_category: LOW,
-      response_class: FIRE,
-    },
-    'Explosion': {
-      risk_category: LOW,
+    "Structure Fire": {
+      risk_category: HIGH,
       response_class: FIRE
     },
-    'HazMat': {
-      risk_category: MEDIUM,
-      response_class: HAZMAT,
-    },
-    'Industrial Accidents': {
-      risk_category: LOW,
-      response_class: FIRE,
-    },
-    'Train / Rail Incident': {
-      risk_category: HIGH,
-      response_class: FIRE,
-    },
-    'Extrication / Entrapped (Machinery, Vehicle)': {
-      risk_category: HIGH,
-      response_class: TECH,
-    },
-    'Mutual Aid / Assist Outside Agency': {
-      risk_category: LOW,
-      response_class: FIRE,
-    },
-    'Confined Space / Structure Collapse': {
-      risk_category: HIGH,
-      response_class: FIRE,
-    },
-    'High Angle Rescue': {
-      risk_category: MEDIUM,
-      response_class: TECH,
-    },
-    'Suspicious Package': {
-      risk_category: HIGH,
-      response_class: HAZMAT,
-    },
-    'Watercraft in Distress': {
-      risk_category: MEDIUM,
-      response_class: TECH,
-    },
-    'Marine Fire': {
+    "Water Rescue": {
       risk_category: MEDIUM,
       response_class: TECH
     },
+    Other: {
+      risk_category: LOW,
+      response_class: FIRE
+    },
+    Explosion: {
+      risk_category: LOW,
+      response_class: FIRE
+    },
+    HazMat: {
+      risk_category: MEDIUM,
+      response_class: HAZMAT
+    },
+    "Industrial Accidents": {
+      risk_category: LOW,
+      response_class: FIRE
+    },
+    "Train / Rail Incident": {
+      risk_category: HIGH,
+      response_class: FIRE
+    },
+    "Extrication / Entrapped (Machinery, Vehicle)": {
+      risk_category: HIGH,
+      response_class: TECH
+    },
+    "Mutual Aid / Assist Outside Agency": {
+      risk_category: LOW,
+      response_class: FIRE
+    },
+    "Confined Space / Structure Collapse": {
+      risk_category: HIGH,
+      response_class: FIRE
+    },
+    "High Angle Rescue": {
+      risk_category: MEDIUM,
+      response_class: TECH
+    },
+    "Suspicious Package": {
+      risk_category: HIGH,
+      response_class: HAZMAT
+    },
+    "Watercraft in Distress": {
+      risk_category: MEDIUM,
+      response_class: TECH
+    },
+    "Marine Fire": {
+      risk_category: MEDIUM,
+      response_class: TECH
+    }
   }
 };
 
 export default class SanFranciscoDemoIncident extends IncidentNormalizer {
   // eslint-disable-next-line no-unused-vars
-  constructor(payload, {
-    timeZone = 'US/Pacific',
-    projection = 'EPSG:4326',
-    fdId = '38005',
-    firecaresId = '94264',
-    name = 'San Francisco Fire Department',
-    state = 'CA',
-    shiftConfig = {
-      firstDay: '2016-10-18',
-      pattern: 'acababacbcacacbabcbcb',
-      shiftStart: '0800',
-    },
-  } = {}) {
+  constructor(
+    payload,
+    {
+      timeZone = "US/Pacific",
+      projection = "EPSG:4326",
+      fdId = "38005",
+      firecaresId = "94264",
+      name = "San Francisco Fire Department",
+      state = "CA",
+      shiftConfig = {
+        firstDay: "2016-10-18",
+        pattern: "acababacbcacacbabcbcb",
+        shiftStart: "0800"
+      }
+    } = {}
+  ) {
     super(payload, {
       timeZone,
       projection,
@@ -147,39 +150,45 @@ export default class SanFranciscoDemoIncident extends IncidentNormalizer {
     const payload = this.payload;
 
     // hack to fix e02
-    if (payload.station_area === 'E02') payload.station_area = '02';
+    if (payload.station_area === "E02") payload.station_area = "02";
     const address = {
-      address_id: '',
+      address_id: "",
       address_line1: payload.address,
-      state: 'CA',
-      longitude: (payload.location.coordinates[0]),
+      state: "CA",
+      city: payload.city,
+      postal_code: payload.zipcode_of_incident,
+      response_zone: payload.box,
+      longitude: payload.location.coordinates[0],
       latitude: parseFloat(payload.location.coordinates[1]),
       battalion: payload.battalion,
       first_due: payload.station_area,
       location: {
-        neighborhood: payload.neighborhoods_analysis_boundaries,
-      },
+        neighborhood: payload.neighborhoods_analysis_boundaries
+      }
     };
 
-    address.geohash = IncidentNormalizer.latLongToGeohash(address.longitude, address.latitude);
+    address.geohash = IncidentNormalizer.latLongToGeohash(
+      address.longitude,
+      address.latitude
+    );
 
     return address;
   }
 
   static normalizeCategory(incidentType) {
-    const emsIncidents = ['Medical Incident'];
-    const otherIncidents = ['Other', 'Citizen Assist / Service Call'];
+    const emsIncidents = ["Medical Incident"];
+    const otherIncidents = ["Other", "Citizen Assist / Service Call"];
 
     if (emsIncidents.includes(incidentType)) {
-      return 'EMS';
+      return "EMS";
     } else if (otherIncidents.includes(incidentType)) {
-      return 'OTHER';
+      return "OTHER";
     }
-    return 'FIRE';
+    return "FIRE";
   }
 
   normalizeDescription() {
-    const ts = (t) => {
+    const ts = t => {
       if (_.isEmpty(t)) {
         return null;
       }
@@ -190,38 +199,47 @@ export default class SanFranciscoDemoIncident extends IncidentNormalizer {
     const payload = this.payload;
     const eventOpened = this.parseDate(payload.entry_dttm);
 
-    const classAndRisk = SanFranciscoDemoIncident.lookupClassAndRisk(payload.call_type_group, payload.call_type);
+    const classAndRisk = SanFranciscoDemoIncident.lookupClassAndRisk(
+      payload.call_type_group,
+      payload.call_type
+    );
 
     const description = {
       event_opened: eventOpened.format(),
       psap_answer_time: ts(payload.received_dttm),
       category: SanFranciscoDemoIncident.normalizeCategory(payload.call_type),
+      type: payload.call_type,
+      subtype: payload.call_type_group,
+      incident_number: payload.incident_number,
+      event_id: payload.call_number,
       hour_of_day: eventOpened.hours(),
-      day_of_week: eventOpened.format('dddd'),
+      day_of_week: eventOpened.format("dddd"),
       shift: this.calculateShift(eventOpened.format()),
       priority: payload.priority,
-      alarms: !_.isUndefined(payload.number_of_alarms) ?
-        Number(payload.number_of_alarms) : undefined,
+      alarms: !_.isUndefined(payload.number_of_alarms)
+        ? Number(payload.number_of_alarms)
+        : undefined,
       response_class: classAndRisk.response_class,
-      risk_category: classAndRisk.risk_category,
+      risk_category: classAndRisk.risk_category
     };
 
-    description.extended_data = IncidentNormalizer.calculateDescriptionExtendedData(description);
+    description.extended_data = IncidentNormalizer.calculateDescriptionExtendedData(
+      description
+    );
     return description;
   }
 
-
   static lookupClassAndRisk(group, type) {
-    let response_class = 'Unknown';
-    let risk_category = 'Unknown';
+    let response_class = "Unknown";
+    let risk_category = "Unknown";
 
-    if (group === 'Alarm') {
-       response_class = 'Alarm';
-       risk_category = LOW;
+    if (group === "Alarm") {
+      response_class = "Alarm";
+      risk_category = LOW;
     }
 
     if (!_.isNil(group) && !_.isNil(type)) {
-      let lookup = _.get(typeLookup, `${group}.${type}`)
+      let lookup = _.get(typeLookup, `${group}.${type}`);
       if (lookup) {
         response_class = lookup.response_class;
         risk_category = lookup.risk_category;
@@ -230,30 +248,30 @@ export default class SanFranciscoDemoIncident extends IncidentNormalizer {
 
     return {
       response_class,
-      risk_category,
+      risk_category
     };
-  };
+  }
 
   static normalizeUnitType(unitType) {
     switch (unitType) {
-      case 'CHIEF':
-        return 'Chief Officer';
-      case 'ENGINE':
-        return 'Engine';
-      case 'TRUCK':
-        return 'Truck/Aerial';
-      case 'MEDIC':
-        return 'ALS';
-      case 'RESCUE CAPTAIN':
-        return 'Other Apparatus';
-      case 'RESCUE SQUAD':
-        return 'Rescue Unit';
-      case 'AIRPORT':
-        return 'ARFF';
-      case 'SUPPORT':
-        return 'Support Unit';
+      case "CHIEF":
+        return "Chief Officer";
+      case "ENGINE":
+        return "Engine";
+      case "TRUCK":
+        return "Truck/Aerial";
+      case "MEDIC":
+        return "ALS";
+      case "RESCUE CAPTAIN":
+        return "Other Apparatus";
+      case "RESCUE SQUAD":
+        return "Rescue Unit";
+      case "AIRPORT":
+        return "ARFF";
+      case "SUPPORT":
+        return "Support Unit";
       default:
-        return 'Unknown';
+        return "Unknown";
     }
   }
 
@@ -264,19 +282,19 @@ export default class SanFranciscoDemoIncident extends IncidentNormalizer {
     const incApp = {
       unit_id: unit.unit_id,
       unit_type: SanFranciscoDemoIncident.normalizeUnitType(unit.unit_type),
-      unit_status: {},
+      unit_status: {}
     };
 
     const statuses = [
-      //['dispatched', 'dispatch_dttm'],
-      ['enroute', 'response_dttm'],
-      ['arrived', 'on_scene_dttm'],
-      ['available', 'available_dttm'],
-      ['transport_started', 'transport_dttm'],
-      ['transport_arrived', 'hospital_dttm'],
+      ["dispatched", "dispatch_dttm"],
+      ["enroute", "response_dttm"],
+      ["arrived", "on_scene_dttm"],
+      ["available", "available_dttm"],
+      ["transport_started", "transport_dttm"],
+      ["transport_arrived", "hospital_dttm"]
     ];
 
-    statuses.forEach((status) => {
+    statuses.forEach(status => {
       const [type, key] = status;
       if (unit[key]) {
         const timestamp = this.parseDate(unit[key]).format();
@@ -284,13 +302,15 @@ export default class SanFranciscoDemoIncident extends IncidentNormalizer {
           timestamp
         };
 
-        if (type === 'dispatched') {
+        if (type === "dispatched") {
           incApp.shift = this.calculateShift(timestamp);
         }
       }
     });
 
-    incApp.extended_data = IncidentNormalizer.calculateUnitStatusExtendedData(incApp.unit_status);
+    incApp.extended_data = IncidentNormalizer.calculateUnitStatusExtendedData(
+      incApp.unit_status
+    );
 
     apparatus.push(incApp);
     return apparatus;
