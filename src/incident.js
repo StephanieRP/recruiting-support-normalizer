@@ -163,7 +163,8 @@ export default class SanFranciscoDemoIncident extends IncidentNormalizer {
       battalion: payload.battalion,
       first_due: payload.station_area,
       location: {
-        neighborhood: payload.neighborhoods_analysis_boundaries
+        neighborhood: payload.neighborhoods_analysis_boundaries,
+        supervisor_district: payload.supervisor_district
       }
     };
 
